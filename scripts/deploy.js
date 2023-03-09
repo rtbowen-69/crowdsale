@@ -4,24 +4,32 @@
 // You can also run a script with `npx hardhat run <script>`. If you do that, Hardhat
 // will compile your contracts, add the Hardhat Runtime Environment's members to the
 // global scope, and execute the script.
-const hre = require("hardhat");
+const hre = require("hardhat"); // All of hardhat
 
 async function main() {
-  const currentTimestampInSeconds = Math.round(Date.now() / 1000);
-  const unlockTime = currentTimestampInSeconds + 60;
+  const NAME = 'Rodd Token'
+  const SYMBOL = 'RODD'
+  const MAX_SUPPLY = '10000000'
+  const PRICE = ethers.utils.parseUnits('0.25', 'ether')
 
-  const lockedAmount = hre.ethers.utils.parseEther("0.001");
+  const Token = await hre.ethers.getContractFactory('Token')    // Deploy Token
+  let token = await Token.deploy(NAME, SYMBOL, MAX_SUPPLY)
 
-  const Lock = await hre.ethers.getContractFactory("Lock");
-  const lock = await Lock.deploy(unlockTime, { value: lockedAmount });
+  await token.deployed()
+  console.log(`Token deployed to: ${token.address}\n`)
 
-  await lock.deployed();
+  const Crowdsale = await hre.ethers.getContractFactory('Crowdsale')    // Deploy Crowdsale
+  const crowdsale = await Crowdsale.deploy(token.address, PRICE, ethers.utils.parseUnits(MAX_SUPPLY, 'ether'))
+  await crowdsale.deployed();
 
-  console.log(
-    `Lock with ${ethers.utils.formatEther(
-      lockedAmount
-    )}ETH and unlock timestamp ${unlockTime} deployed to ${lock.address}`
-  );
+  console.log(`Crowdsale deployed to: ${crowdsale.address}\n`)
+
+  // Send tokens to crowdsale
+  const transaction = await token.transfer(crowdsale.address, ethers.utils.parseUnits(MAX_SUPPLY, 'ether'))
+  await transaction.wait();
+
+  console.log(`Tokens transferred to Crowdsale\n`)
+ 
 }
 
 // We recommend this pattern to be able to use async/await everywhere
