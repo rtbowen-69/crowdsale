@@ -10,12 +10,12 @@ async function main() {
   const NAME = 'Rodd Token'
   const SYMBOL = 'RODD'
   const MAX_SUPPLY = '10000000'
-  const PRICE = ethers.utils.parseUnits('0.25', 'ether')
+  const PRICE = ethers.utils.parseUnits('0.025', 'ether')
 
   const Token = await hre.ethers.getContractFactory('Token')    // Deploy Token
-  let token = await Token.deploy(NAME, SYMBOL, MAX_SUPPLY)
-
+  const token = await Token.deploy(NAME, SYMBOL, MAX_SUPPLY)
   await token.deployed()
+  
   console.log(`Token deployed to: ${token.address}\n`)
 
   const Crowdsale = await hre.ethers.getContractFactory('Crowdsale')    // Deploy Crowdsale
