@@ -75,7 +75,7 @@ function App() {
 		<Container>
 			<Navigation />
 
-			<h1 className='my-4 text-center'>Intorducing ROdd Token!</h1>
+			<h1 className='my-4 text-center'>Introducing ROdd Token!</h1>
 
 			{isLoading ? (
 				<Loading />
