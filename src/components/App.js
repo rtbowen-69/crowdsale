@@ -6,9 +6,10 @@ import { ethers } from 'ethers'
 // Components
 import Navigation from './Navigation';
 import Buy from './Buy';
+import Progress from './Progress';
 import Info from './Info';
 import Loading from './Loading';
-import Progress from './Progress';
+
 // ABIs
 import TOKEN_ABI from '../abis/Token.json'
 import CROWDSALE_ABI from '../abis/Crowdsale.json'
@@ -83,7 +84,7 @@ function App() {
 				<>
 					<p className='text-center'><strong>Current Price:</strong> {price} ETH</p>
 					<Buy provider={provider} price={price} crowdsale={crowdsale} setIsLoading={setIsLoading} />
-					<Progress amxTokens={maxTokens} tokensSold={tokensSold} />
+					<Progress maxTokens={maxTokens} tokensSold={tokensSold} />
 				</>
 			)}
 

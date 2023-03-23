@@ -19,7 +19,7 @@ describe('Crowdsale', () => {
     // Deploy token
     token = await Token.deploy('Rodd Token', 'RODD', '10000000')
 
-    // Configure Accounta
+    // Configure Accounts
     accounts = await ethers.getSigners()
     deployer = accounts[0]
     user1 = accounts[1]

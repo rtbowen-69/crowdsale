@@ -10,7 +10,7 @@ async function main() {
   const NAME = 'Rodd Token'
   const SYMBOL = 'RODD'
   const MAX_SUPPLY = '10000000'
-  const PRICE = ethers.utils.parseUnits('0.025', 'ether')
+  const PRICE = ethers.utils.parseUnits('0.0025', 'ether')
 
   const Token = await hre.ethers.getContractFactory('Token')    // Deploy Token
   const token = await Token.deploy(NAME, SYMBOL, MAX_SUPPLY)
