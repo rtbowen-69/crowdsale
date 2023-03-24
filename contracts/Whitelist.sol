@@ -1,42 +1,49 @@
-// SPDX-License-Identifier: Unlicensed
+// SPDX-License-Identifier: Unlicense
 pragma solidity ^0.8.0;
 
+import "hardhat/console.sol";
+import "./Token.sol";
+
 contract Whitelist {
-    string public name = "Whitelist";
+    address public owner;
+    mapping(address => bool) public whitelist;
 
-    // mapping(address => bool) public whitelist;
-    // address public owner;
-    // uint256 public openingTime;
-    // uint256 public closingTime;
-    // uint256 public minimumTokens = 1000;
-    // uint256 public maximumTokens = 10000;
+    uint256 public whitelistStartTime;
+    uint256 public whitelistEndTime;
 
-    // constructor(uint256 _openingTime, uint256 _closingTime) {
-    //     owner = msg.sender;
-    //     openingTime = _openingTime;
-    //     closingTime = _closingTime;
-    // }
+    event WhitelistUpdated(uint256 whitelistStartTime, uint256 whitelistEndTime);
+    event AddedToWhitelist(address account);
+    event RemovedFromWhitelist(address account);
 
-    // function addToWhitelist(address[] memory _addresses) public onlyOwner {
-    //     require(block.timestamp >= openingTime && block.timestamp <= closingTime, "Whitelist is not open");
-    //     for (uint i = 0; i < _addresses.length; i++) {
-    //         whitelist[_addresses[i]] = true;
-    //     }
-    // }
+    constructor() {
+        owner = msg.sender;
+    }
 
-    // function removeFromWhitelist(address[] memory _addresses) public onlyOwner {
-    //     require(block.timestamp >= openingTime && block.timestamp <= closingTime, "Whitelist is not open");
-    //     for (uint i = 0; i < _addresses.length; i++) {
-    //         whitelist[_addresses[i]] = false;
-    //     }
-    // }
+    modifier onlyOwner() {
+        require(msg.sender == owner, "Caller is not the owner");
+        _;
+    }
 
-    // function isWhitelisted(address _address) public view returns (bool) {
-    //     return whitelist[_address];
-    // }
+    function isWhitelisted(address account) public view returns (bool) {
+        return whitelist[account];
+    }
 
-    // modifier onlyOwner {
-    //     require(msg.sender == owner, "Only owner can call this function.");
-    //     _;
-    // }
+    function updateWhitelistPeriod(uint256 _whitelistStartTime, uint256 _whitelistEndTime) public onlyOwner {
+        require(_whitelistStartTime <= _whitelistEndTime, "Invalid whitelist period");
+        whitelistStartTime = _whitelistStartTime;
+        whitelistEndTime = _whitelistEndTime;
+        emit WhitelistUpdated(_whitelistStartTime, _whitelistEndTime);
+    }
+
+    function addToWhitelist(address account) public onlyOwner {
+        require(!whitelist[account], "Account is already whitelisted");
+        whitelist[account] = true;
+        emit AddedToWhitelist(account);
+    }
+
+    function removeFromWhitelist(address account) public onlyOwner {
+        require(whitelist[account], "Account is not whitelisted");
+        whitelist[account] = false;
+        emit RemovedFromWhitelist(account);
+    }
 }
