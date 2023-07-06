@@ -37,6 +37,9 @@ function App() {
 		const provider = new ethers.providers.Web3Provider(window.ethereum)
 		setProvider(provider)
 
+		// Fetch Chain ID
+    	const { chainId } = await provider.getNetwork()	// Destructuring
+
 		// Initiate contracts
 		const token = new ethers.Contract(config[31337].token.address, TOKEN_ABI, provider)
 		const crowdsale = new ethers.Contract(config[31337].crowdsale.address, CROWDSALE_ABI, provider)
@@ -66,7 +69,7 @@ function App() {
 		setIsLoading(false)
 	}
 
-	useEffect(() => {
+	useEffect(() => {		// An event on webpage changes and will rerun after each change rerender the page
 		if (isLoading) {
 			loadBlockchainData()
 		}
