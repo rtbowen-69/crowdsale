@@ -2,7 +2,6 @@ import { useEffect, useState } from 'react';
 import { Container } from 'react-bootstrap';
 import { ethers } from 'ethers'
 
-
 // Components
 import Navigation from './Navigation';
 import Buy from './Buy';
@@ -16,8 +15,6 @@ import CROWDSALE_ABI from '../abis/Crowdsale.json'
 
 // config
 import config from '../config.json';
-
-
 
 function App() {
 	const [provider, setProvider] = useState(null)
@@ -38,11 +35,11 @@ function App() {
 		setProvider(provider)
 
 		// Fetch Chain ID
-    	const { chainId } = await provider.getNetwork()	// Destructuring
+		const { chainId } = await provider.getNetwork()
 
 		// Initiate contracts
-		const token = new ethers.Contract(config[31337].token.address, TOKEN_ABI, provider)
-		const crowdsale = new ethers.Contract(config[31337].crowdsale.address, CROWDSALE_ABI, provider)
+		const token = new ethers.Contract(config[chainId].token.address, TOKEN_ABI, provider)
+		const crowdsale = new ethers.Contract(config[chainId].crowdsale.address, CROWDSALE_ABI, provider)
 		setCrowdsale(crowdsale)
 
 		// Fetch Accounts
@@ -91,15 +88,13 @@ function App() {
 				</>
 			)}
 
-
 			<hr />
-
 
 			{account && (
 				<Info account={account} accountBalance={accountBalance} />
 			)}
 		</Container>
-	)
+	);
 }
 
 export default App;

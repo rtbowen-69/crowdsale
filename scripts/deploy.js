@@ -18,12 +18,8 @@ async function main() {
   
   console.log(`Token deployed to: ${token.address}\n`)
 
-  const Whitelist = await hre.ethers.getContractFactory('Whitelist')  // Deploy Whitelist contract
-  const whitelist = await Whitelist.deploy()
-  await whitelist.deployed();
-
   const Crowdsale = await hre.ethers.getContractFactory('Crowdsale')    // Deploy Crowdsale
-  const crowdsale = await Crowdsale.deploy(token.address, PRICE, ethers.utils.parseUnits(MAX_SUPPLY, 'ether'), whitelist, whitelistEndTime, whitelistOpen)
+  const crowdsale = await Crowdsale.deploy(token.address, PRICE, ethers.utils.parseUnits(MAX_SUPPLY, 'ether'))
   await crowdsale.deployed();
 
   console.log(`Crowdsale deployed to: ${crowdsale.address}\n`)

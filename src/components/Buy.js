@@ -6,7 +6,6 @@ import Col from 'react-bootstrap/Col';
 import Spinner from 'react-bootstrap/Spinner';
 import { ethers } from 'ethers'
 
-
 const Buy = ({ provider, price, crowdsale, setIsLoading }) => {
 	const [amount, setAmount] = useState('0')
 	const [isWaiting, setIsWaiting] = useState(false)
@@ -49,8 +48,7 @@ const Buy = ({ provider, price, crowdsale, setIsLoading }) => {
 				</Col>
 			</Form.Group>
 		</Form>
-	)
+	);
 }
-
 
 export default Buy;
