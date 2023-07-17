@@ -82,6 +82,10 @@ describe('Crowdsale', () => {
       it('rejects insufficient ethers', async () => {
         await expect(crowdsale.connect(user1).buyTokens(tokens(10), { value: 0 })).to.be.reverted
       })
+
+      it('logs the token balance', async () => {
+        console.log("Token Balance:", (await token.balanceOf(crowdsale.address)).toString())
+      })
     })    
   })
 
@@ -99,6 +103,15 @@ describe('Crowdsale', () => {
       it('updates contracts ether balance', async () => {
         expect(await ethers.provider.getBalance(crowdsale.address)).to.equal(amount)
       }) 
+
+      it('fails if contract balance is not enough', async () => {
+        // Set the token balance of the contract to a lower value than the amount being requested
+        const contractBalanceBefore = await token.balanceOf(crowdsale.address);
+        const amountGreaterThanBalance = contractBalanceBefore.add(tokens(1)); // Request 1 token more than the contract's balance
+
+        // Ensure the buyTokens function fails due to insufficient contract balance
+        await expect(crowdsale.connect(user1).buyTokens(amountGreaterThanBalance, { value: ether(10) })).to.be.reverted;
+      })
 
       it('updates user token balance', async () => {
         expect(await token.balanceOf(user1.address)).to.equal(amount)
