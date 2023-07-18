@@ -4,7 +4,7 @@ import logo from '../logo.png';
 
 const Navigation = () => {
   return(
-    <Navbar>
+    <Navbar className='my-3'>
       <img 
         alt ="logo" 
         src={logo} 

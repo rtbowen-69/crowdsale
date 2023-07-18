@@ -86,6 +86,15 @@ describe('Crowdsale', () => {
       it('logs the token balance', async () => {
         console.log("Token Balance:", (await token.balanceOf(crowdsale.address)).toString())
       })
+
+      it('fails if contract balance is not enough', async () => {
+        // Set the token balance of the contract to a lower value than the amount being requested
+        const contractBalanceBefore = await token.balanceOf(crowdsale.address);
+        const amountGreaterThanBalance = contractBalanceBefore.add(tokens(1)); // Request 1 token more than the contract's balance
+
+        // Ensure the buyTokens function fails due to insufficient contract balance
+        await expect(crowdsale.connect(user1).buyTokens(amountGreaterThanBalance, { value: ether(10) })).to.be.reverted;
+      })
     })    
   })
 
@@ -104,18 +113,14 @@ describe('Crowdsale', () => {
         expect(await ethers.provider.getBalance(crowdsale.address)).to.equal(amount)
       }) 
 
-      it('fails if contract balance is not enough', async () => {
-        // Set the token balance of the contract to a lower value than the amount being requested
-        const contractBalanceBefore = await token.balanceOf(crowdsale.address);
-        const amountGreaterThanBalance = contractBalanceBefore.add(tokens(1)); // Request 1 token more than the contract's balance
-
-        // Ensure the buyTokens function fails due to insufficient contract balance
-        await expect(crowdsale.connect(user1).buyTokens(amountGreaterThanBalance, { value: ether(10) })).to.be.reverted;
+      it('updates user token balance', async () => {
+        expect(await token.balanceOf(user1.address)).to.equal(amount)
       })
 
       it('updates user token balance', async () => {
         expect(await token.balanceOf(user1.address)).to.equal(amount)
       })
+
     })  
   })
 
@@ -132,9 +137,7 @@ describe('Crowdsale', () => {
 
       it('updates the price', async () => {
         expect(await crowdsale.price()).to.be.equal(price)
-
       })
-
     })
 
     describe('Failure', () => {
@@ -142,9 +145,7 @@ describe('Crowdsale', () => {
       it('prevents a non-owner from updating price', async () => {
         await expect(crowdsale.connect(user1).setPrice(price)).to.be.reverted
       })
-
     })
-
   })
 
   describe('Finializing sale',  () => {
