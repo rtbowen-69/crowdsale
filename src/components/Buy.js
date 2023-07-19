@@ -16,6 +16,14 @@ const Buy = ({ provider, price, crowdsale, setIsLoading }) => {
 
     try {
 
+      const enteredAmount = parseFloat(amount)  // Converts the entered amount into a number
+
+      if (enteredAmount <= 0 || isNaN(enteredAmount)) { //Check if the entered number is greater than zero
+        window.alert('Please enter a valad amount greater that zero')
+        setIsWaiting(false)
+        return
+      }
+
       const signer = await provider.getSigner()
 
       // Calculate the reqiored eth
@@ -28,7 +36,9 @@ const Buy = ({ provider, price, crowdsale, setIsLoading }) => {
       window.alert('User rejected or transaction reverted')
     }
 
+    setIsWaiting(false)
     setIsLoading(true)
+
   }
 
   return(
@@ -37,7 +47,7 @@ const Buy = ({ provider, price, crowdsale, setIsLoading }) => {
         <Col>
           <Form.Control type="number" placeholder="Enter amount" onChange={(e) => setAmount(e.target.value)}/>
         </Col>
-        <Col className='test-center'>
+        <Col className='text-center'>
           {isWaiting ? (
             <Spinner animation="border" />
           ) : (

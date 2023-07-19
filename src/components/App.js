@@ -21,6 +21,11 @@ function App() {
   const [crowdsale, setCrowdsale] = useState(null)
 
   const [account, setAccount] = useState(null)
+
+  // account -> Variable of current current account value
+  // setAccount(0x0...) -> Function to update account value
+  // null is default value of account (parallel assignment)
+
   const [accountBalance, setAccountBalance] = useState(0)
 
   const [price, setPrice] = useState(0)
@@ -87,9 +92,7 @@ function App() {
           <Progress maxTokens={maxTokens} tokensSold={tokensSold} />
         </>
       )}
-
       <hr />
-
       {account && (
         <Info account={account} accountBalance={accountBalance} />
       )}
