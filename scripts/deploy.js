@@ -5,6 +5,7 @@
 // will compile your contracts, add the Hardhat Runtime Environment's members to the
 // global scope, and execute the script.
 const hre = require("hardhat"); // All of hardhat
+let openingTime;
 
 async function main() {
   const NAME = 'Rodd Token'
@@ -18,8 +19,24 @@ async function main() {
   
   console.log(`Token deployed to: ${token.address}\n`)
 
+  const now = Math.floor(Date.now() / 1000) //Get current time stamp
+  const openingTime = now + 3600  // Set time to open in one hour
+
+  console.log(`Opening Time :${openingTime}`);
+
+  const minContribution = ethers.utils.parseUnits('1.0', 'ether')//Minimum contribution
+  const maxContribution = ethers.utils.parseUnits('1000.0', 'ether')//Maximum contribution
+
+
   const Crowdsale = await hre.ethers.getContractFactory('Crowdsale')    // Deploy Crowdsale
-  const crowdsale = await Crowdsale.deploy(token.address, PRICE, ethers.utils.parseUnits(MAX_SUPPLY, 'ether'))
+  const crowdsale = await Crowdsale.deploy(
+    token.address,
+    PRICE,
+    ethers.utils.parseUnits(MAX_SUPPLY, 'ether'),
+    openingTime,
+    minContribution,
+    maxContribution
+  )
   await crowdsale.deployed();
 
   console.log(`Crowdsale deployed to: ${crowdsale.address}\n`)
@@ -29,7 +46,19 @@ async function main() {
   await transaction.wait();
 
   console.log(`Tokens transferred to Crowdsale\n`)
- 
+
+  // Whitelist the specified accounts
+  const whitelistAddresses = [
+    ethers.utils.getAddress("0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266"),
+    ethers.utils.getAddress("0x70997970C51812dc3A010C7d01b50e0d17dc79C8"),
+    ethers.utils.getAddress("0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC")
+  ];
+
+  for (const address of whitelistAddresses) {
+    const ethAddress = ethers.utils.getAddress(address.toLowerCase());
+    await crowdsale.addToWhitelist(ethAddress);
+    console.log(`Address ${ethAddress} added to the whitelist`);
+  }
 }
 
 // We recommend this pattern to be able to use async/await everywhere

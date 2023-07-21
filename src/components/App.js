@@ -10,22 +10,18 @@ import Info from './Info';
 import Loading from './Loading';
 
 // ABIs
-import TOKEN_ABI from '../abis/Token.json'
-import CROWDSALE_ABI from '../abis/Crowdsale.json'
+import TOKEN_ABI from '../abis/Token.json';
+import CROWDSALE_ABI from '../abis/Crowdsale.json';
 
 // config
 import config from '../config.json';
 
 function App() {
+  const [openingTime, setOpeningTime] = useState(null)
   const [provider, setProvider] = useState(null)
   const [crowdsale, setCrowdsale] = useState(null)
 
   const [account, setAccount] = useState(null)
-
-  // account -> Variable of current current account value
-  // setAccount(0x0...) -> Function to update account value
-  // null is default value of account (parallel assignment)
-
   const [accountBalance, setAccountBalance] = useState(0)
 
   const [price, setPrice] = useState(0)
@@ -68,6 +64,10 @@ function App() {
     const tokensSold = ethers.utils.formatUnits(await crowdsale.tokensSold(), 18)
     setTokensSold(tokensSold)
 
+    // Fetch opening time
+    const openingTime = await crowdsale.openingTime()
+    setOpeningTime(openingTime.toNumber())
+
     setIsLoading(false)
   }
 
@@ -79,7 +79,7 @@ function App() {
 
   return(
     <Container>
-      <Navigation />
+      <Navigation openingTime={openingTime} />
 
       <h1 className='my-4 text-center'>Introducing ROdd Token!</h1>
 
