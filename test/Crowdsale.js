@@ -1,6 +1,9 @@
 const { expect } = require('chai');
 const { ethers } = require('hardhat');
 
+const minContribution = ethers.utils.parseEther('1.0', 'ether');
+const maxContribution = ethers.utils.parseEther('1000.0', 'ether');
+
 const parseEther = (n) => {
   return ethers.utils.parseEther(n.toString())
 }
@@ -10,6 +13,12 @@ const tokens = (n)=> {
 }
 
 const ether = tokens
+
+// Helper function to get the current timestamp in seconds
+async function getCurrentTimestamp() {
+  const latestBlock = await ethers.provider.getBlock('latest')
+  return latestBlock.timestamp
+}
 
 describe('Crowdsale', () => {
   let crowdsale, token
@@ -47,12 +56,9 @@ describe('Crowdsale', () => {
 
     // Deploy Crowdsale
     const now = Math.floor(Date.now() / 1000)
-    const openingTime = now + 0 // sets time to earlier than current time stamp
+    const openingTime = now  // sets time to current time stamp
     const minContribution = ethers.utils.parseEther('1.0', 'ether')
     const maxContribution = ethers.utils.parseEther('1000.0', 'ether')
-
-    console.log('Min Contribution:', ethers.utils.formatEther(minContribution)) // Log the minContribution
-    console.log('Max Contribution:', ethers.utils.formatEther(maxContribution)) // Log the maxContribution
 
     crowdsale = await Crowdsale.deploy(
       token.address,
@@ -69,7 +75,6 @@ describe('Crowdsale', () => {
 
     // Whitelist the specified accounts
     await addToWhitelist();
-
   })
 
   describe('Deployment', () => {
@@ -129,11 +134,31 @@ describe('Crowdsale', () => {
 
       it('fails if contract balance is not enough', async () => {
         // Set the token balance of the contract to a lower value than the amount being requested
-        const contractBalanceBefore = await token.balanceOf(crowdsale.address);
-        const amountGreaterThanBalance = contractBalanceBefore.add(tokens(1)); // Request 1 token more than the contract's balance
+        const contractBalanceBefore = await token.balanceOf(crowdsale.address)
+        const amountGreaterThanBalance = contractBalanceBefore.add(tokens(1))// Request 1 token more than the contract's balance
 
         // Ensure the buyTokens function fails due to insufficient contract balance
-        await expect(crowdsale.connect(user1).buyTokens(amountGreaterThanBalance, { value: ether(10) })).to.be.reverted;
+        await expect(crowdsale.connect(user1).buyTokens(amountGreaterThanBalance, { value: ethers.utils.parseEther('10') })).to.be.reverted
+      })
+
+      it('rejects buying tokens above the maximum contribution', async () => {
+        const maxContribution = await crowdsale.maxContribution()
+
+        // Attempt to buy tokens with an amount greater than the maximum contribution allowed
+        const amountAboveMaxContribution = maxContribution.add(tokens(1)) // Request 1 token more than the maximum contribution
+
+        // Ensure the buyTokens function fails due to exceeding the maximum contribution
+        await expect(crowdsale.connect(user1).buyTokens(amountAboveMaxContribution, { value: ethers.utils.parseEther('10') })).to.be.reverted
+      })
+
+      it('rejects buying tokens below the minimum contribution', async () => {
+        const minContribution = await crowdsale.minContribution()
+
+        // Attempt to buy tokens with an amount less than the minimum contribution allowed
+        const amountBelowMinContribution = minContribution.sub(tokens(1)) // Request 1 token less than the minimum contribution
+
+        // Ensure the buyTokens function fails due to being below the minimum contribution
+        await expect(crowdsale.connect(user1).buyTokens(amountBelowMinContribution, { value: ethers.utils.parseEther('10') })).to.be.reverted
       })
     })    
   })
@@ -146,13 +171,16 @@ describe('Crowdsale', () => {
 
       beforeEach(async () => {
         const gasLimit = 3000000
-        console.log("Amount", ethers.utils.formatEther(amount))
-        transaction = await user1.sendTransaction({ to: crowdsale.address, value: amount, gasLimit: gasLimit })
+        transaction = await user1.sendTransaction({ 
+          to: crowdsale.address,
+          value: amount,
+          gasLimit: gasLimit
+        })
         result = await transaction.wait()
       })
 
       it('updates contracts ether balance', async () => {
-        
+
         // Retrieve the current ether balance of contract
         const contractEtherBalance = await ethers.provider.getBalance(crowdsale.address)
 
@@ -234,4 +262,66 @@ describe('Crowdsale', () => {
       })
     })  
   })
+
+  describe('Managing Whitelist', () => {
+    let deployer, user1, user2
+    let Token, token, Crowdsale, crowdsale
+
+    beforeEach(async () => {
+      [deployer, user1, user2] = await ethers.getSigners()
+
+      // Deploy Token contract
+      Token = await ethers.getContractFactory("Token")
+      token = await Token.deploy('Rodd Token', 'RODD', '10000000')
+      await token.deployed()
+
+      // Deploy Crowdsale contract and pass token address to it
+      Crowdsale = await ethers.getContractFactory("Crowdsale")
+      crowdsale = await Crowdsale.deploy(
+        token.address,
+        tokens(1),
+        tokens(10000000),
+        Math.floor(Date.now() / 1000) + 0,
+        tokens(0.1),
+        tokens(100)
+      )
+      await crowdsale.deployed()
+    })
+
+    it('adds addresses to the whitelist successfully', async () => {
+      expect(await crowdsale.whitelist(user1.address)).to.equal(false)
+
+      // Deployer (owner) adds user1 to the whitelist
+      await crowdsale.connect(deployer).addToWhitelist([user1.address])
+
+      // Now, user1 should be whitelisted
+      expect(await crowdsale.whitelist(user1.address)).to.equal(true)
+    })
+
+    it('removes addresses from the whitelist successfully', async () => {
+      // Add user1 to the whitelist first
+      await crowdsale.connect(deployer).addToWhitelist([user1.address])
+
+      expect(await crowdsale.whitelist(user1.address)).to.equal(true)
+
+      // Deployer (owner) removes user1 from the whitelist
+      await crowdsale.connect(deployer).removeFromWhitelist([user1.address])
+
+      // Now, user1 should not be whitelisted
+      expect(await crowdsale.whitelist(user1.address)).to.equal(false)
+    })
+
+    it('fails to add addresses by non-authorized users', async () => {
+      await expect(crowdsale.connect(user1).addToWhitelist([user2.address])).to.be.reverted
+    })
+
+    it('fails to remove addresses by non-authorized users', async () => {
+      // Add user2 to the whitelist first
+      await crowdsale.connect(deployer).addToWhitelist([user2.address])
+
+      // Non-authorized user (user1) tries to remove user2 from the whitelist
+      await expect(crowdsale.connect(user1).removeFromWhitelist([user2.address])).to.be.reverted
+    })
+  })
+
 })

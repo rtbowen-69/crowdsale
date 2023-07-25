@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Container } from 'react-bootstrap';
 import { ethers } from 'ethers'
+import Countdown from 'react-countdown'
+
 
 // Components
 import Navigation from './Navigation';
@@ -66,7 +68,7 @@ function App() {
 
     // Fetch opening time
     const openingTime = await crowdsale.openingTime()
-    setOpeningTime(openingTime.toNumber())
+    setOpeningTime(openingTime.toString() + '000')
 
     setIsLoading(false)
   }
@@ -79,7 +81,8 @@ function App() {
 
   return(
     <Container>
-      <Navigation openingTime={openingTime} />
+      <Navigation />
+        <span><strong>Time left till Presale:</strong><Countdown date ={Number(openingTime)} className="h6" /></span>
 
       <h1 className='my-4 text-center'>Introducing ROdd Token!</h1>
 

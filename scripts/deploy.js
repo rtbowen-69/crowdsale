@@ -54,11 +54,9 @@ async function main() {
     ethers.utils.getAddress("0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC")
   ];
 
-  for (const address of whitelistAddresses) {
-    const ethAddress = ethers.utils.getAddress(address.toLowerCase());
-    await crowdsale.addToWhitelist(ethAddress);
-    console.log(`Address ${ethAddress} added to the whitelist`);
-  }
+    await crowdsale.addToWhitelist(whitelistAddresses)
+    console.log(`Address added to the whitelist`)
+  
 }
 
 // We recommend this pattern to be able to use async/await everywhere

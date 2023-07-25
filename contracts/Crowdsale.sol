@@ -54,10 +54,14 @@ contract Crowdsale {
   // Buy tokens directly by sending Ether
   // --> https://docs.soliditylang.org/en/v0.8.15/contracts.html#receive-ether-function
 
+  event LogReceivedEther(uint256 amount);
+
   receive() external payable onlyWhenOpen {    //only available outside the contract allowa contract to receive ether
     uint256 amount = msg.value / price;
-    require(amount >= minContribution, "Below minimum contribution");
-    require(amount <= maxContribution, "Exceeds maximum contribution");
+    require(amount * 1e18 >= minContribution, "Below minimum contribution");
+    require(amount * 1e18 <= maxContribution, "Exceeds maximum contribution");
+
+    emit LogReceivedEther(msg.value);
 
     buyTokens(amount * 1e18);
   }
@@ -86,7 +90,11 @@ contract Crowdsale {
     for (uint256 i = 0; i < _addresses.length; i++) {
       whitelist[_addresses[i]] = false;
     }
-  }  
+  } 
+
+  function setOpeningTime(uint256 _openingTime) public onlyOwner {
+    openingTime = _openingTime;  
+  } 
 
   // Finalize Sale
   function finalize() public onlyOwner {
