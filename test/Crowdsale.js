@@ -38,7 +38,7 @@ describe('Crowdsale', () => {
     await crowdsale.addToWhitelist(whitelistAddresses)
   }
 
-  before(async () => {
+  beforeEach(async () => {
     // Load Contracts
     const Crowdsale = await ethers.getContractFactory('Crowdsale')
     const Token = await ethers.getContractFactory('Token')
@@ -98,10 +98,10 @@ describe('Crowdsale', () => {
 
     describe('Success', () => {
 
-      // beforeEach(async() => {
-      //   transaction = await crowdsale.connect(user1).buyTokens(amount,{ value: ether(10) })
-      //   result = await transaction.wait()
-      // })
+      beforeEach(async() => {
+        transaction = await crowdsale.connect(user1).buyTokens(amount,{ value: ether(10) })
+        result = await transaction.wait()
+      })
 
       it('transfers tokens', async () => {
         expect(await token.balanceOf(crowdsale.address)).to.equal(tokens(9999990))
@@ -109,23 +109,7 @@ describe('Crowdsale', () => {
       })
 
       it('updates contracts ether balance', async () => {
-        const initialEtherBalance = ethers.utils.parseEther('10.0')
-        const amountSpent = ethers.utils.parseEther('10.0') // This should match the amount spent in the buyTokens transaction
-
-        // Calculate the expected contract ether balance
-        const expectedContractBalance = initialEtherBalance.add(amountSpent)
-
-        // Retrieve the current ether balance of the contract
-        const contractEtherBalance = await ethers.provider.getBalance(crowdsale.address)
-
-        // Ensure that the contract ether balance is correctly updated
-        expect(contractEtherBalance).to.equal(expectedContractBalance) 
-
-        // Perform the finalize transaction
-        transaction = await crowdsale.connect(deployer).finalize()
-        result = await transaction.wait()
-
-        // expect(await ethers.provider.getBalance(crowdsale.address)).to.equal(amount)
+        expect(await ethers.provider.getBalance(crowdsale.address)).to.equal(amount)
       }) 
 
       it('updates tokens sold', async () => {
@@ -185,15 +169,15 @@ describe('Crowdsale', () => {
 
     describe('Success', () => {
 
-      // beforeEach(async () => {
-      //   const gasLimit = 3000000
-      //   transaction = await user1.sendTransaction({ 
-      //     to: crowdsale.address,
-      //     value: amount,
-      //     gasLimit: gasLimit
-      //   })
-      //   result = await transaction.wait()
-      // })
+      beforeEach(async () => {
+        const gasLimit = 3000000
+        transaction = await user1.sendTransaction({ 
+          to: crowdsale.address,
+          value: amount,
+          gasLimit: gasLimit
+        })
+        result = await transaction.wait()
+      })
 
       it('updates contracts ether balance', async () => {
 
@@ -222,10 +206,10 @@ describe('Crowdsale', () => {
 
     describe('Success', () => {
 
-      // beforeEach(async () => {
-      //   transaction = await crowdsale.connect(deployer).setPrice(price)
-      //   result = await transaction.wait()
-      // })
+      beforeEach(async () => {
+        transaction = await crowdsale.connect(deployer).setPrice(price)
+        result = await transaction.wait()
+      })
 
       it('updates the price', async () => {
         expect(await crowdsale.price()).to.be.equal(price)
@@ -247,13 +231,13 @@ describe('Crowdsale', () => {
 
     describe('Success', () => {
       
-      // beforeEach(async () => {
-      //   transaction = await crowdsale.connect(user1).buyTokens(amount, { value: value })
-      //   result = await transaction.wait()
+      beforeEach(async () => {
+        transaction = await crowdsale.connect(user1).buyTokens(amount, { value: value })
+        result = await transaction.wait()
 
-      //   transaction = await crowdsale.connect(deployer).finalize()
-      //   result = await transaction.wait()
-      // })
+        transaction = await crowdsale.connect(deployer).finalize()
+        result = await transaction.wait()
+      })
 
       it('transfers remaining tokens to owner', async () => {
         expect(await token.balanceOf(crowdsale.address)).to.equal(0)
@@ -282,26 +266,26 @@ describe('Crowdsale', () => {
     let deployer, user1, user2
     let Token, token, Crowdsale, crowdsale
 
-    // beforeEach(async () => {
-    //   [deployer, user1, user2] = await ethers.getSigners()
+    beforeEach(async () => {
+      [deployer, user1, user2] = await ethers.getSigners()
 
-    //   // Deploy Token contract
-    //   Token = await ethers.getContractFactory("Token")
-    //   token = await Token.deploy('Rodd Token', 'RODD', '10000000')
-    //   await token.deployed()
+      // Deploy Token contract
+      Token = await ethers.getContractFactory("Token")
+      token = await Token.deploy('Rodd Token', 'RODD', '10000000')
+      await token.deployed()
 
-    //   // Deploy Crowdsale contract and pass token address to it
-    //   Crowdsale = await ethers.getContractFactory("Crowdsale")
-    //   crowdsale = await Crowdsale.deploy(
-    //     token.address,
-    //     tokens(1),
-    //     tokens(10000000),
-    //     Math.floor(Date.now() / 1000) + 0,
-    //     tokens(0.1),
-    //     tokens(100)
-    //   )
-    //   await crowdsale.deployed()
-    // })
+      // Deploy Crowdsale contract and pass token address to it
+      Crowdsale = await ethers.getContractFactory("Crowdsale")
+      crowdsale = await Crowdsale.deploy(
+        token.address,
+        tokens(1),
+        tokens(10000000),
+        Math.floor(Date.now() / 1000) + 0,
+        tokens(0.1),
+        tokens(100)
+      )
+      await crowdsale.deployed()
+    })
 
     it('adds addresses to the whitelist successfully', async () => {
       expect(await crowdsale.whitelist(user1.address)).to.equal(false)
