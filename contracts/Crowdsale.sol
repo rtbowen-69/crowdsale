@@ -11,6 +11,7 @@ contract Crowdsale {
   uint256 public maxTokens;
   uint256 public tokensSold;
   uint256 public openingTime;
+  uint public saleEnd;
 
   mapping(address => bool) public whitelist;
   uint256 public minContribution;
@@ -28,12 +29,13 @@ contract Crowdsale {
     uint256 _maxContribution
   ) {
     owner = msg.sender;// Stores address of person deploying contract
-    token = _token; //Saves address stored in _token as the stae variable token
+    token = _token; //Saves address stored in _token as the state variable token
     price = _price;
     maxTokens = _maxTokens;
     openingTime = _openingTime;
     minContribution = _minContribution;
     maxContribution = _maxContribution;
+    saleEnd = block.timestamp + 1 weeks;
   }
 
   modifier onlyOwner() {
@@ -57,19 +59,35 @@ contract Crowdsale {
   event LogReceivedEther(uint256 amount);
 
   receive() external payable onlyWhenOpen {    //only available outside the contract allowa contract to receive ether
-    uint256 amount = msg.value / price;
-    require(amount * 1e18 >= minContribution, "Below minimum contribution");
-    require(amount * 1e18 <= maxContribution, "Exceeds maximum contribution");
+    uint256 amount = msg.value / price; // Convert the ether value to token amount
+    require(amount >= minContribution, "Below minimum contribution");
+    require(amount <= maxContribution, "Exceeds maximum contribution");
 
     emit LogReceivedEther(msg.value);
 
-    buyTokens(amount * 1e18);
+    buyTokens(amount);
   }
 
   function buyTokens(uint256 _amount) public payable onlyWhenOpen onlyWhitelisted {
-    require(msg.value == (_amount / 1e18) * price); // Calculates that the amount paid is enough
-    require(token.balanceOf(address(this)) >= _amount);  // Shows the balance of current smart contratc
+    require(msg.value >= minContribution, 'Does not meet minimum contribution');
+
+    uint256 balanceBefore = token.balanceOf(address(this));
+
+    uint256 tokensToBuy = msg.value / price;
+    require(msg.value == (tokensToBuy * price)); // Checks value equals amount * Price
+
+    require(msg.value <= maxContribution, 'Exceeds maximum contribution');
+
+    require(tokensSold + tokensToBuy <= maxTokens, "Sold out");
+
+    console.log('Received value in Wei:', msg.value);
+    console.log('Calculated value in Wei:', _amount);
+    console.log('Token Amount requested:', _amount / price);
+
+    require(token.balanceOf(address(this)) >= tokensToBuy);  // Shows the balance of current smart contratc
     tokensSold += _amount;
+
+    require(token.transfer(msg.sender, tokensToBuy), "Transfer failed");  // Validate transfer
 
     require(token.transfer(msg.sender, _amount)); // Sends tokens to user calling this function
 
@@ -96,10 +114,22 @@ contract Crowdsale {
     openingTime = _openingTime;  
   } 
 
-  // Finalize Sale
-  function finalize() public onlyOwner {
-    require(block.timestamp >= openingTime, "Crowdsale is not yet open");
+  function setMinContribution(uint256 _minContribution) public onlyOwner {
+    minContribution = _minContribution;
+  }
 
+  function setMaxContribution(uint256 _maxContribution) public onlyOwner {
+    maxContribution = _maxContribution;
+  }
+
+  // Finalize Sale
+  function finalize(uint256 amount) public onlyOwner {
+    uint256 finalBalanceBefore = token.balanceOf(address(this));
+
+    require(block.timestamp >= openingTime, "Crowdsale is not yet open");
+    require(block.timestamp >= saleEnd, "Sale not yet ended");
+
+    require(token.balanceOf(address(this)) == finalBalanceBefore - amount);
     require(token.transfer(owner, token.balanceOf(address(this))));
 
     uint256 value = address(this).balance; //assigns the balance of this contract to value var

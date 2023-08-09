@@ -95,11 +95,23 @@ describe('Crowdsale', () => {
   describe('Buying Tokens', () => {
     let transaction, result
     let amount = tokens(10)
+    let price =
 
     describe('Success', () => {
 
       beforeEach(async() => {
-        transaction = await crowdsale.connect(user1).buyTokens(amount,{ value: ether(10) })
+
+        price = await crowdsale.price()
+
+        const priceWei = ethers.utils.parseUnits(price, 'ether')
+        const value = priceWei.div(amount)
+        const valueString = value.toString()
+
+        console.log('Price:', ethers.utils.formatEther(price))
+        console.log('Token Amount:', ethers.utils.formatUnits(amount, 18))
+        console.log('Ether Value sent', ethers.utils.formatEther(valueString))
+
+        transaction = await crowdsale.connect(user1).buyTokens(amount,{ value: value })
         result = await transaction.wait()
       })
 
@@ -129,7 +141,7 @@ describe('Crowdsale', () => {
       })
 
       it('logs the token balance', async () => {
-        console.log("Token Balance:", (await token.balanceOf(crowdsale.address)).toString())
+        console.log("Token Balance:", ethers.utils.formatUnits(await token.balanceOf(crowdsale.address)))
       })
 
       it('fails if contract balance is not enough', async () => {
@@ -320,6 +332,41 @@ describe('Crowdsale', () => {
 
       // Non-authorized user (user1) tries to remove user2 from the whitelist
       await expect(crowdsale.connect(user1).removeFromWhitelist([user2.address])).to.be.reverted
+    })
+  })
+
+  describe('Changing Min and Max Contribution', () => {
+    let transaction, result
+    let newMinContribution = tokens(2)
+    let newMaxContribution = tokens(200)
+
+    describe('Success', () => {
+      beforeEach(async () => {
+        // Change min and max contribution values using the owner account
+        transaction = await crowdsale.connect(deployer).setMinContribution(newMinContribution)
+        result = await transaction.wait()
+
+        transaction = await crowdsale.connect(deployer).setMaxContribution(newMaxContribution)
+        result = await transaction.wait()
+      })
+
+      it('updates minContribution', async () => {
+        expect(await crowdsale.minContribution()).to.equal(newMinContribution)
+      })
+
+      it('updates maxContribution', async () => {
+        expect(await crowdsale.maxContribution()).to.equal(newMaxContribution)
+      })
+    })
+
+    describe('Failure', () => {
+      it('prevents non-owners from changing minContribution', async () => {
+        await expect(crowdsale.connect(user1).setMinContribution(newMinContribution)).to.be.reverted
+      })
+
+      it('prevents non-owners from changing maxContribution', async () => {
+        await expect(crowdsale.connect(user1).setMaxContribution(newMaxContribution)).to.be.reverted
+      })
     })
   })
 })

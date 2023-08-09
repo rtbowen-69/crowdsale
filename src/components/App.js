@@ -18,21 +18,27 @@ import CROWDSALE_ABI from '../abis/Crowdsale.json';
 // config
 import config from '../config.json';
 
+
 function App() {
-  const [openingTime, setOpeningTime] = useState(null)
+  const [openingTime, setOpeningTime] = useState(0)
+  const [isPresaleOpen] = useState(null)
   const [provider, setProvider] = useState(null)
   const [crowdsale, setCrowdsale] = useState(null)
 
   const [account, setAccount] = useState(null)
   const [accountBalance, setAccountBalance] = useState(0)
+  const [minContribution, setMinContribution] = useState(0)
+  const [maxContribution, setMaxContribution] = useState(0)
 
   const [price, setPrice] = useState(0)
   const [maxTokens, setMaxTokens] = useState(0)
   const [tokensSold, setTokensSold] = useState(0)
+  // const [currentTime, setCurrentTime] = useState(null)
 
   const [isLoading, setIsLoading] = useState(true)
 
   const loadBlockchainData = async () => {
+
     // initiate provider
     const provider = new ethers.providers.Web3Provider(window.ethereum)
     setProvider(provider)
@@ -67,11 +73,16 @@ function App() {
     setTokensSold(tokensSold)
 
     // Fetch opening time
-    const openingTime = await crowdsale.openingTime()
-    setOpeningTime(openingTime.toString() + '000')
+    const openingTimeInSeconds = await crowdsale.openingTime()
+    setOpeningTime(Number(openingTimeInSeconds) * 1000)
+
+    const minContribution = await crowdsale.minContribution()
+    const maxContribution = await crowdsale.maxContribution()
+    setMinContribution(minContribution)
+    setMaxContribution(maxContribution)
 
     setIsLoading(false)
-  }
+  } 
 
   useEffect(() => {   // An event on webpage changes and will rerun after each change rerender the page
     if (isLoading) {
@@ -82,7 +93,21 @@ function App() {
   return(
     <Container>
       <Navigation />
-        <span><strong>Time left till Presale:</strong><Countdown date ={Number(openingTime)} className="h6" /></span>
+        <div className="my-2 text-center">
+          {Number(openingTime) >= Date.now(
+          ) ? (
+            <span>
+              <strong>Time left till Presale :</strong>
+              <Countdown date={Number(openingTime)} className="h6" />
+            </span>
+
+          ) : (
+            <span className={isPresaleOpen ? 'presale-open-msg' : ''}>
+              <strong>Presale Minting is now Open!</strong>
+            </span>
+
+          )}
+        </div>
 
       <h1 className='my-4 text-center'>Introducing ROdd Token!</h1>
 
@@ -91,8 +116,19 @@ function App() {
       ) : (
         <>
           <p className='text-center'><strong>Current Price:</strong> {price} ETH</p>
-          <Buy provider={provider} price={price} crowdsale={crowdsale} setIsLoading={setIsLoading} />
-          <Progress maxTokens={maxTokens} tokensSold={tokensSold} />
+          <Buy 
+            provider={provider}
+            price={price}
+            crowdsale={crowdsale}
+            setIsLoading={setIsLoading}
+            openingTime={openingTime}
+            maxContribution={maxContribution}
+            minContribution={minContribution}
+          />
+          <Progress
+            maxTokens={maxTokens}
+            tokensSold={tokensSold}
+          />
         </>
       )}
       <hr />
