@@ -69,6 +69,11 @@ contract Crowdsale {
   }
 
   function buyTokens(uint256 _amount) public payable onlyWhenOpen onlyWhitelisted {
+    
+    console.log('Received value in Wei:', msg.value);
+    console.log('Calculated value in Wei:', _amount);
+    console.log('Token Amount requested:', _amount / price);
+
     require(msg.value >= minContribution, 'Does not meet minimum contribution');
 
     uint256 balanceBefore = token.balanceOf(address(this));

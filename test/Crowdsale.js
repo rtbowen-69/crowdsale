@@ -107,6 +107,12 @@ describe('Crowdsale', () => {
         const value = priceWei.div(amount)
         const valueString = value.toString()
 
+        console.log("value", value)
+        console.log("value type", typeof value)
+
+        console.log("valueString", valueString) 
+        console.log("valueString type", typeof valueString)
+        
         console.log('Price:', ethers.utils.formatEther(price))
         console.log('Token Amount:', ethers.utils.formatUnits(amount, 18))
         console.log('Ether Value sent', ethers.utils.formatEther(valueString))
